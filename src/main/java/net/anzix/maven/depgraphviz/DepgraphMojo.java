@@ -6,12 +6,12 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
@@ -26,6 +26,7 @@ import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
  * Create graphviz dot file from maven dependency graph.
  *
  * @goal depgraphviz
+ * @requiresDependencyResolution test
  * 
  */
 public class DepgraphMojo
@@ -95,26 +96,50 @@ public class DepgraphMojo
     private Set<Artifact> processed = new HashSet();
 
     /**
-     * @parameter expression=${depgraphviz.reactorOnly} default-value="true"
+     * @parameter expression="${depgraphviz.reactorOnly}" default-value="true"
      */
-    private boolean reactorOnly = true;
+    private boolean reactorOnly;
 
     /**
      * @parameter expression=${depgraphviz.reactorOnly} default-value="false"
      */
-    private boolean showVersion = false;
+    private boolean showVersion;
 
     /**
-     * @parameter expression=${depgraphviz.showGroupId} default-value="false"
+     * @parameter expression="${depgraphviz.showGroupId}" default-value="false"
      */
-    private boolean showGroupId = false;
+    private boolean showGroupId;
 
-    FileWriter writer;
+    /**
+     * @parameter expression="${depgraphviz.format}" default-value="graphml"
+     */
+    private String format;
+
+    private Graph graph;
 
     ArtifactFilter filter;
 
+    private Map<String,GraphWriter> writers = new HashMap<String,GraphWriter>();
+
+    public DepgraphMojo() {
+        writers.put("dot", new DotWriter());
+        writers.put("graphml", new GraphMLWriter());
+    }
+
+
     public void execute()
             throws MojoExecutionException {
+
+        GraphWriter writer = writers.get(format);
+        if (writer == null){
+            StringBuilder sb = new StringBuilder();
+            sb.append("Wrong output format type. Supporteed formats are: ");
+            for (String key : writers.keySet()){
+                sb.append(key).append(" ");
+            }
+            throw new MojoExecutionException(sb.toString());
+        }
+        
         try {
             filter = new ArtifactFilter() {
 
@@ -137,23 +162,23 @@ public class DepgraphMojo
             if (!outputDirectory.exists()){
                 outputDirectory.mkdirs();
             }
-            writer = new FileWriter(new File(outputDirectory,"dep.dot"));
-            writer.write("digraph G {\n");
+            graph = new Graph();
+
             for (MavenProject proj : reactorProjects) {
                 DependencyNode depNode = dependencyTreeBuilder.buildDependencyTree(proj, localRepository, artifactFactory, artifactMetadataSource, filter, artifactCollector);
-                printDependency(depNode);
+                collectDepndencies(depNode);
             }
 
-            writer.write("}\n");
-            writer.close();
-
+            File outputFile = new File(outputDirectory, "dep."+writer.getExtension());
+           
+            writer.write(outputFile, graph);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new MojoExecutionException("Error on plugin execution", ex);
         }
     }
 
-    protected void printDependency(DependencyNode depNode) throws IOException {
+    protected void collectDepndencies(DependencyNode depNode) throws IOException {
         if (!filter.include(depNode.getArtifact())) {
             return;
         }
@@ -168,32 +193,69 @@ public class DepgraphMojo
         for (DependencyNode cn : (List<DependencyNode>) depNode.getChildren()) {
 
             if (filter.include(cn.getArtifact())) {
-
-                writer.write("\"");
-                writeArtifactName(depNode.getArtifact(), writer);
-                writer.write("\" -> \"");
-                writeArtifactName(cn.getArtifact(), writer);
-                writer.write("\";\n");
-
-                printDependency(cn);
+                graph.addEdge(artifactToNodeName(depNode.getArtifact()), artifactToNodeName(cn.getArtifact()));
+                collectDepndencies(cn);
                 isDependencyExist = true;
             }
         }
         if (!isDependencyExist){
-            writer.write("\"");
-                writeArtifactName(depNode.getArtifact(), writer);
-                writer.write("\";\n");
+            graph.addNode(artifactToNodeName(depNode.getArtifact()));
         }
 
     }
 
-    protected void writeArtifactName(Artifact a, Writer writer) throws IOException {
+
+    protected String artifactToNodeName(Artifact a)  {
+        StringBuilder b = new StringBuilder();
         if (showGroupId) {
-            writer.write(a.getGroupId() + ":");
+            b.append(a.getGroupId()).append(":");
         }
-        writer.write(a.getArtifactId());
+        b.append(a.getArtifactId());
         if (showVersion) {
-            writer.write(":" + a.getVersion());
+            b.append(":").append(a.getVersion());
         }
+        return b.toString();
     }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public File getOutputDirectory() {
+        return outputDirectory;
+    }
+
+    public void setOutputDirectory(File outputDirectory) {
+        this.outputDirectory = outputDirectory;
+    }
+
+    public boolean isReactorOnly() {
+        return reactorOnly;
+    }
+
+    public void setReactorOnly(boolean reactorOnly) {
+        this.reactorOnly = reactorOnly;
+    }
+
+    public boolean isShowGroupId() {
+        return showGroupId;
+    }
+
+    public void setShowGroupId(boolean showGroupId) {
+        this.showGroupId = showGroupId;
+    }
+
+    public boolean isShowVersion() {
+        return showVersion;
+    }
+
+    public void setShowVersion(boolean showVersion) {
+        this.showVersion = showVersion;
+    }
+
+    
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<y:ShapeNode xmlns:y="http://www.yworks.com/xml/graphml">
+    <y:Geometry height="51.0" width="60.0" x="415.0" y="184.0"/>
+    <y:Fill color="#FFCC00" transparent="false"/>
+    <y:BorderStyle color="#000000" type="line" width="1.0"/>
+    <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="17.962890625" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="44.59375" x="7.703125" y="16.5185546875">asdasd</y:NodeLabel>
+    <y:Shape type="rectangle"/>
+</y:ShapeNode>
+
