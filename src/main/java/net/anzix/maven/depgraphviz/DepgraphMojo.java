@@ -1,6 +1,5 @@
 package net.anzix.maven.depgraphviz;
 
-
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -25,7 +24,7 @@ import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
 /**
  * Create graphviz dot file from maven dependency graph.
  *
- * @goal depgraphviz
+ * @goal graph
  * @requiresDependencyResolution test
  * 
  */
@@ -115,31 +114,36 @@ public class DepgraphMojo
      */
     private String format;
 
+    /**
+     * the dependency graph structure.
+     */
     private Graph graph;
 
+    /**
+     * Artifact filter to igore dependencies.
+     */
     ArtifactFilter filter;
 
-    private Map<String,GraphWriter> writers = new HashMap<String,GraphWriter>();
+    private Map<String, GraphWriter> writers = new HashMap<String, GraphWriter>();
 
     public DepgraphMojo() {
         writers.put("dot", new DotWriter());
         writers.put("graphml", new GraphMLWriter());
     }
 
-
     public void execute()
             throws MojoExecutionException {
 
         GraphWriter writer = writers.get(format);
-        if (writer == null){
+        if (writer == null) {
             StringBuilder sb = new StringBuilder();
             sb.append("Wrong output format type. Supporteed formats are: ");
-            for (String key : writers.keySet()){
+            for (String key : writers.keySet()) {
                 sb.append(key).append(" ");
             }
             throw new MojoExecutionException(sb.toString());
         }
-        
+
         try {
             filter = new ArtifactFilter() {
 
@@ -159,7 +163,7 @@ public class DepgraphMojo
                 reactorArtifacts.add(proj.getArtifact());
             }
 
-            if (!outputDirectory.exists()){
+            if (!outputDirectory.exists()) {
                 outputDirectory.mkdirs();
             }
             graph = new Graph();
@@ -169,8 +173,8 @@ public class DepgraphMojo
                 collectDepndencies(depNode);
             }
 
-            File outputFile = new File(outputDirectory, "dep."+writer.getExtension());
-           
+            File outputFile = new File(outputDirectory, "dep." + writer.getExtension());
+
             writer.write(outputFile, graph);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -198,14 +202,13 @@ public class DepgraphMojo
                 isDependencyExist = true;
             }
         }
-        if (!isDependencyExist){
+        if (!isDependencyExist) {
             graph.addNode(artifactToNodeName(depNode.getArtifact()));
         }
 
     }
 
-
-    protected String artifactToNodeName(Artifact a)  {
+    protected String artifactToNodeName(Artifact a) {
         StringBuilder b = new StringBuilder();
         if (showGroupId) {
             b.append(a.getGroupId()).append(":");
@@ -256,6 +259,4 @@ public class DepgraphMojo
     public void setShowVersion(boolean showVersion) {
         this.showVersion = showVersion;
     }
-
-    
 }

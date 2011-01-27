@@ -15,6 +15,7 @@ import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 
 /**
+ * graphml writer with yed extension.
  *
  * @author elek
  */

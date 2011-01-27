@@ -1,13 +1,11 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package net.anzix.maven.depgraphviz;
 
 import java.io.File;
 import java.io.FileWriter;
 
 /**
+ * Write Graphviz file.
  *
  * @author elek
  */

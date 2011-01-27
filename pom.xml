@@ -3,10 +3,31 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.anzix.maven</groupId>
-    <artifactId>maven-depgraphviz-plugin</artifactId>
+    <artifactId>maven-depanal-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
-    <name>Depgraphviz Maven Mojo</name>
+    <name>Dependency Graph analizer</name>
+    <description>Mojo to collect dependencies between the maven projects and generate grahml/grahviz output from it</description>
+    <url>https://github.com/elek/depgraphviz</url>
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>6</version>
+    </parent>
+    <licenses>
+        <license>
+            <name>GPL</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Elek, Márton</name>
+        </developer>
+    </developers>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -20,6 +41,11 @@
             </plugin>
         </plugins>
     </build>
+    <scm>
+        <connection>scm:git:git@github.com:elek/depgraphviz.git</connection>
+        <url>scm:git:git@github.com:elek/depgraphviz.git</url>
+        <developerConnection>scm:git:git@github.com:elek/depgraphviz.git</developerConnection>
+    </scm>
     <dependencies>
         <dependency>
             <groupId>org.apache.maven</groupId>
