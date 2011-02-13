@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.anzix.maven</groupId>
     <artifactId>maven-depanal-plugin</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <packaging>maven-plugin</packaging>
     <name>Dependency Graph analizer</name>
     <description>Mojo to collect dependencies between the maven projects and generate grahml/grahviz output from it</description>
