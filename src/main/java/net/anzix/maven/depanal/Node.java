@@ -1,4 +1,6 @@
-package net.anzix.maven.depgraphviz;
+package net.anzix.maven.depanal;
+
+import java.io.File;
 
 /**
  * Reprezents a an artifact in the dependency graph.
@@ -7,7 +9,16 @@ package net.anzix.maven.depgraphviz;
  */
 public class Node {
 
+    /**
+     * Artifact name.
+     * 
+     */
     private String id;
+
+    /**
+     * The resolver location if exists.
+     */
+    private File location;
 
     public Node(String id) {
         this.id = id;
@@ -42,6 +53,14 @@ public class Node {
     @Override
     public String toString() {
         return id;
+    }
+
+    public File getLocation() {
+        return location;
+    }
+
+    public void setLocation(File location) {
+        this.location = location;
     }
 
 

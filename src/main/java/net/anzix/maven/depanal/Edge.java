@@ -1,5 +1,5 @@
 
-package net.anzix.maven.depgraphviz;
+package net.anzix.maven.depanal;
 
 /**
  *

@@ -1,5 +1,5 @@
 
-package net.anzix.maven.depgraphviz;
+package net.anzix.maven.depanal;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +20,18 @@ public class Graph {
 
     private List<Edge> edges = new ArrayList<Edge>();
 
+
+     public void addEdge(Node startNode, Node endNode) {
+        checkNode(startNode);
+        checkNode(endNode);
+        edges.add(new Edge(startNode, endNode));
+    }
+
+    public void checkNode(Node n){
+        if (!nodes.containsKey(n.getId())){
+            addNode(n);
+        }
+    }
     public void addEdge(String startNodeId, String endNodeId) {
         Node start = getNode(startNodeId);
         Node end = getNode(endNodeId);
@@ -44,8 +56,13 @@ public class Graph {
         return new ArrayList(nodes.values());
     }
 
-    public void addNode(String nodeId) {
-        getNode(nodeId);
+    public Node addNode(Node n) {
+        nodes.put(n.getId(), n);
+        return n;
+    }
+
+    public Node addNode(String nodeId) {
+        return getNode(nodeId);
     }
 
     public Collection<Node> getOprhanNodes() {

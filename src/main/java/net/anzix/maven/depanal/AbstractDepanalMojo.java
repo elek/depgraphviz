@@ -1,4 +1,4 @@
-package net.anzix.maven.depgraphviz;
+package net.anzix.maven.depanal;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
@@ -7,10 +7,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
@@ -21,15 +19,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.tree.DependencyNode;
 import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
 
-/**
- * Create graphviz dot file from maven dependency graph.
- *
- * @goal graph
- * @requiresDependencyResolution test
- * 
- */
-public class DepgraphMojo
-        extends AbstractMojo {
+public abstract class AbstractDepanalMojo extends AbstractMojo {
 
     /**
      * Maven Project. Default value: ${project}
@@ -75,7 +65,7 @@ public class DepgraphMojo
      * @parameter expression="${project.build.directory}"
      * @required
      */
-    private File outputDirectory;
+    protected File outputDirectory;
 
     /**
      * @parameter default-value="${reactorProjects}"
@@ -95,54 +85,23 @@ public class DepgraphMojo
     private Set<Artifact> processed = new HashSet();
 
     /**
-     * @parameter expression="${depgraphviz.reactorOnly}" default-value="true"
+     * @parameter expression="${depanal.reactorOnly}" default-value="true"
      */
-    private boolean reactorOnly;
-
-    /**
-     * @parameter expression=${depgraphviz.reactorOnly} default-value="false"
-     */
-    private boolean showVersion;
-
-    /**
-     * @parameter expression="${depgraphviz.showGroupId}" default-value="false"
-     */
-    private boolean showGroupId;
-
-    /**
-     * @parameter expression="${depgraphviz.format}" default-value="graphml"
-     */
-    private String format;
-
+    private boolean reactorOnly;      
     /**
      * the dependency graph structure.
      */
-    private Graph graph;
+    protected Graph graph;
 
     /**
-     * Artifact filter to igore dependencies.
+     * Artifact filter to ignore dependencies.
      */
     ArtifactFilter filter;
 
-    private Map<String, GraphWriter> writers = new HashMap<String, GraphWriter>();
-
-    public DepgraphMojo() {
-        writers.put("dot", new DotWriter());
-        writers.put("graphml", new GraphMLWriter());
-    }
-
+    @Override
     public void execute()
             throws MojoExecutionException {
 
-        GraphWriter writer = writers.get(format);
-        if (writer == null) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Wrong output format type. Supporteed formats are: ");
-            for (String key : writers.keySet()) {
-                sb.append(key).append(" ");
-            }
-            throw new MojoExecutionException(sb.toString());
-        }
 
         try {
             filter = new ArtifactFilter() {
@@ -170,19 +129,20 @@ public class DepgraphMojo
 
             for (MavenProject proj : reactorProjects) {
                 DependencyNode depNode = dependencyTreeBuilder.buildDependencyTree(proj, localRepository, artifactFactory, artifactMetadataSource, filter, artifactCollector);
-                collectDepndencies(depNode);
+                collectDependencies(depNode);
             }
 
-            File outputFile = new File(outputDirectory, "dep." + writer.getExtension());
 
-            writer.write(outputFile, graph);
+            doProcess();
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new MojoExecutionException("Error on plugin execution", ex);
         }
     }
 
-    protected void collectDepndencies(DependencyNode depNode) throws IOException {
+    public abstract void doProcess() throws Exception;
+
+    protected void collectDependencies(DependencyNode depNode) throws IOException {
         if (!filter.include(depNode.getArtifact())) {
             return;
         }
@@ -197,37 +157,21 @@ public class DepgraphMojo
         for (DependencyNode cn : (List<DependencyNode>) depNode.getChildren()) {
 
             if (filter.include(cn.getArtifact())) {
-                graph.addEdge(artifactToNodeName(depNode.getArtifact()), artifactToNodeName(cn.getArtifact()));
-                collectDepndencies(cn);
+                graph.addEdge(artifactToNode(depNode.getArtifact()), artifactToNode(cn.getArtifact()));
+
+                collectDependencies(cn);
                 isDependencyExist = true;
             }
         }
         if (!isDependencyExist) {
-            graph.addNode(artifactToNodeName(depNode.getArtifact()));
+            graph.addNode(artifactToNode(depNode.getArtifact()));
         }
 
     }
 
-    protected String artifactToNodeName(Artifact a) {
-        StringBuilder b = new StringBuilder();
-        if (showGroupId) {
-            b.append(a.getGroupId()).append(":");
-        }
-        b.append(a.getArtifactId());
-        if (showVersion) {
-            b.append(":").append(a.getVersion());
-        }
-        return b.toString();
-    }
+    protected abstract Node artifactToNode(Artifact a);
 
-    public String getFormat() {
-        return format;
-    }
-
-    public void setFormat(String format) {
-        this.format = format;
-    }
-
+   
     public File getOutputDirectory() {
         return outputDirectory;
     }
@@ -244,19 +188,5 @@ public class DepgraphMojo
         this.reactorOnly = reactorOnly;
     }
 
-    public boolean isShowGroupId() {
-        return showGroupId;
-    }
-
-    public void setShowGroupId(boolean showGroupId) {
-        this.showGroupId = showGroupId;
-    }
-
-    public boolean isShowVersion() {
-        return showVersion;
-    }
-
-    public void setShowVersion(boolean showVersion) {
-        this.showVersion = showVersion;
-    }
+   
 }

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.anzix.maven.depgraphviz;
+package net.anzix.maven.depanal;
 
 import java.io.File;
 import java.io.FileWriter;
